@@ -1,7 +1,7 @@
 <?php
-$host = "localhost";
-$user = "root";
-$pass = "";
+$host = "eveeapp.mysql.database.azure.com";
+$user = "eveeapp";
+$pass = "SHEVACvk25";
 $db   = "evee_database";
 
 $koneksi = mysqli_connect($host, $user, $pass, $db);
