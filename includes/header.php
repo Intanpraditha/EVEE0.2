@@ -13,6 +13,7 @@ $basePath = (strpos($_SERVER['SCRIPT_NAME'], '/pages/') !== false) ? '../' : './
   <link rel="shortcut icon" type="image/png" href="../assets/images/logos/logo-icon.png" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css" />
   <link rel="stylesheet" href="../assets/css/styles.min.css" />
+  <link rel="stylesheet" href="../assets/css/custom.css">
 </head>
 
 <body>

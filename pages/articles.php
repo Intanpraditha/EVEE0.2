@@ -10,18 +10,29 @@ $obj = new Crud($koneksi);
 
 // CREATE
 if (isset($_POST['create'])) {
+
+    // Upload gambar
+    $namaFile = null;
+    if (!empty($_FILES['gambar']['name'])) {
+        $folder = "../uploads/";
+        $namaFile = time() . "-" . $_FILES['gambar']['name'];
+        move_uploaded_file($_FILES['gambar']['tmp_name'], $folder . $namaFile);
+    }
+
     $data = [
         'id_article'  => $_POST['id_article'],
         'id_user'     => $_POST['id_user'],
         'judul'       => $_POST['judul'],
         'link'        => $_POST['link'],
-        'fase_siklus' => $_POST['fase_siklus'],
-        'id_fase'     => $_POST['id_fase']
+        'id_fase'     => $_POST['id_fase'],
+        'gambar'      => $namaFile    // simpan nama filenya
     ];
+
     $obj->create('articles', $data);
     header("Location: articles.php");
     exit;
 }
+
 
 // UPDATE
 if (isset($_POST['update'])) {
@@ -30,7 +41,6 @@ if (isset($_POST['update'])) {
         'id_user'     => $_POST['id_user'],
         'judul'       => $_POST['judul'],
         'link'        => $_POST['link'],
-        'fase_siklus' => $_POST['fase_siklus'],
         'id_fase'     => $_POST['id_fase']
     ];
     $obj->update('articles', $data, 'id_article', $id);
@@ -80,10 +90,7 @@ if (isset($_GET['edit'])) {
                                 <label class="form-label">Link</label>
                                 <input class="form-control" name="link" required value="<?= htmlspecialchars($editData['link']) ?>">
                             </div>
-                            <div class="col-md-4">
-                                <label class="form-label">Fase Siklus</label>
-                                <input class="form-control" name="fase_siklus" required value="<?= htmlspecialchars($editData['fase_siklus']) ?>">
-                            </div>
+                            
                             <div class="col-md-4">
                                 <label class="form-label">ID Fase</label>
                                 <input class="form-control" name="id_fase" required value="<?= htmlspecialchars($editData['id_fase']) ?>">
@@ -94,7 +101,7 @@ if (isset($_GET['edit'])) {
                             </div>
                         </form>
                     <?php else: ?>
-                        <form method="POST" class="row g-2">
+                        <form method="POST" enctype="multipart/form-data" class="row g-2">
                             <div class="col-md-4">
                                 <label class="form-label">ID Artikel</label>
                                 <input class="form-control" name="id_article" required placeholder="ex: A0001">
@@ -108,13 +115,14 @@ if (isset($_GET['edit'])) {
                                 <input class="form-control" name="judul" required placeholder="Judul artikel">
                             </div>
                             <div class="col-md-4">
+                                <label class="form-label">Gambar</label>
+                                <input  class="form-control" type="file" name="gambar" accept="image/*">
+                            </div>
+                            <div class="col-md-4">
                                 <label class="form-label">Link</label>
                                 <input class="form-control" name="link" required placeholder="https://...">
                             </div>
-                            <div class="col-md-4">
-                                <label class="form-label">Fase Siklus</label>
-                                <input class="form-control" name="fase_siklus" required placeholder="Fase">
-                            </div>
+                            
                             <div class="col-md-4">
                                 <label class="form-label">ID Fase</label>
                                 <input class="form-control" name="id_fase" required placeholder="Fase ID">
@@ -136,9 +144,10 @@ if (isset($_GET['edit'])) {
                                 <th>ID Artikel</th>
                                 <th>ID User</th>
                                 <th>Judul</th>
+                                <th>Gambar</th>
                                 <th>Link</th>
                                 <th>Fase Siklus</th>
-                                <th>ID Fase</th>
+                                <th>Diunggah</th>
                                 <th>Aksi</th>
                             </tr>
                         </thead>
@@ -148,10 +157,26 @@ if (isset($_GET['edit'])) {
                                     <tr>
                                         <td><?= htmlspecialchars($r['id_article']) ?></td>
                                         <td><?= htmlspecialchars($r['id_user']) ?></td>
+
                                         <td><?= htmlspecialchars($r['judul']) ?></td>
+
+                                        <!-- Gambar -->
+                                        <td>
+                                            <?php if (!empty($r['gambar'])): ?>
+                                                <img src="/EVEE0.2/uploads/<?= htmlspecialchars($r['gambar']) ?>" width="60" alt="">
+                                            <?php else: ?>
+                                                <span class="text-muted">-</span>
+                                            <?php endif; ?>
+                                        </td>
+
+
+                                        <!-- Link -->
                                         <td><a href="<?= htmlspecialchars($r['link']) ?>" target="_blank">Buka</a></td>
-                                        <td><?= htmlspecialchars($r['fase_siklus']) ?></td>
+
+                                        <!-- Fase -->
                                         <td><?= htmlspecialchars($r['id_fase']) ?></td>
+                                        <td><?= htmlspecialchars($r['created_at']) ?></td>
+
                                         <td>
                                             <a href="?edit=<?= urlencode($r['id_article']) ?>" class="btn btn-sm btn-warning">Edit</a>
                                             <a href="?delete=<?= urlencode($r['id_article']) ?>" class="btn btn-sm btn-danger" onclick="return confirm('Hapus data ini?')">Hapus</a>
