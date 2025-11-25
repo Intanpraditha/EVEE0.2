@@ -41,6 +41,14 @@
               </a>
             </li>
             <li class="sidebar-item">
+              <a class="sidebar-link" href="../pages/mood.php" aria-expanded="false">
+                <span>
+                  <i class="ti ti-mood-look-up"></i>
+                </span>
+                <span class="hide-menu">mood</span>
+              </a>
+            </li>
+            <li class="sidebar-item">
               <a class="sidebar-link" href="../pages/articles.php" aria-expanded="false">
                 <span>
                   <i class="ti ti-news"></i>
@@ -49,51 +57,31 @@
               </a>
             </li>
             <li class="sidebar-item">
-              <a class="sidebar-link" href="../pages/detail_user.php" aria-expanded="false">
+              <a class="sidebar-link" href="../pages/selfcare_rules.php" aria-expanded="false">
                 <span>
-                  <i class="ti ti-user"></i>
+                  <i class="ti ti-heart"></i>
                 </span>
-                <span class="hide-menu">detail_user</span>
+                <span class="hide-menu">selfcare rules</span>
               </a>
             </li>
-            <li class="sidebar-item">
-              <a class="sidebar-link" href="../pages/detail_mood.php" aria-expanded="false">
-                <span>
-                  <i class="ti ti-mood-plus"></i>
-                </span>
-                <span class="hide-menu">detail_mood</span>
-              </a>
+            <li class="nav-small-cap">
+              <i class="ti ti-dots nav-small-cap-icon fs-4"></i>
+              <span class="hide-menu">Read Only</span>
             </li>
             <li class="sidebar-item">
-              <a class="sidebar-link" href="../pages/detail_article.php" aria-expanded="false">
-                <span>
-                  <i class="ti ti-article"></i>
-                </span>
-                <span class="hide-menu">detail_article</span>
-              </a>
-            </li>
-            <li class="sidebar-item">
-              <a class="sidebar-link" href="../pages/detail_period.php" aria-expanded="false">
+              <a class="sidebar-link" href="../pages/period_cycles.php" aria-expanded="false">
                 <span>
                   <i class="ti ti-droplet"></i>
                 </span>
-                <span class="hide-menu">detail_period</span>
+                <span class="hide-menu">siklus</span>
               </a>
             </li>
             <li class="sidebar-item">
-              <a class="sidebar-link" href="../pages/fase_siklus.php" aria-expanded="false">
+              <a class="sidebar-link" href="../pages/activities.php" aria-expanded="false">
                 <span>
-                  <i class="ti ti-clock"></i>
+                  <i class="ti ti-calendar"></i>
                 </span>
-                <span class="hide-menu">fase_siklus</span>
-              </a>
-            </li>
-            <li class="sidebar-item">
-              <a class="sidebar-link" href="../pages/mood.php" aria-expanded="false">
-                <span>
-                  <i class="ti ti-mood-look-up"></i>
-                </span>
-                <span class="hide-menu">mood</span>
+                <span class="hide-menu">activities</span>
               </a>
             </li>
             <li class="sidebar-item">
@@ -104,6 +92,43 @@
                 <span class="hide-menu">notification</span>
               </a>
             </li>
+
+
+            <!-- <li class="sidebar-item">
+              <a class="sidebar-link" href="../pages/detail_mood.php" aria-expanded="false">
+                <span>
+                  <i class="ti ti-mood-plus"></i>
+                </span>
+                <span class="hide-menu">detail_mood</span>
+              </a>
+            </li>
+            
+            <li class="sidebar-item">
+              <a class="sidebar-link" href="../pages/detail_user.php" aria-expanded="false">
+                <span>
+                  <i class="ti ti-user"></i>
+                </span>
+                <span class="hide-menu">detail_user</span>
+              </a>
+            </li>
+            <li class="sidebar-item">
+              <a class="sidebar-link" href="../pages/detail_article.php" aria-expanded="false">
+                <span>
+                  <i class="ti ti-article"></i>
+                </span>
+                <span class="hide-menu">detail_article</span>
+              </a>
+            </li>
+            
+            <li class="sidebar-item">
+              <a class="sidebar-link" href="../pages/fase_siklus.php" aria-expanded="false">
+                <span>
+                  <i class="ti ti-clock"></i>
+                </span>
+                <span class="hide-menu">fase_siklus</span>
+              </a>
+            </li>
+            
             <li class="sidebar-item">
               <a class="sidebar-link" href="../pages/period_record.php" aria-expanded="false">
                 <span>
@@ -119,15 +144,8 @@
                 </span>
                 <span class="hide-menu">reminders</span>
               </a>
-            </li>
-            <li class="sidebar-item">
-              <a class="sidebar-link" href="../pages/selfcare_recom.php" aria-expanded="false">
-                <span>
-                  <i class="ti ti-heart"></i>
-                </span>
-                <span class="hide-menu">selfcare_recom</span>
-              </a>
-            </li>
+            </li> -->
+            
 
             
           </ul>

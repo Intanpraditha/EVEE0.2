@@ -1,196 +1,236 @@
 <?php
-// pages/articles.php
-require '../config/koneksi.php';
+require '../classes/Database.php';
 require '../classes/Crud.php';
-include '../includes/header.php';
-include '../includes/sidebar.php';
-include '../includes/topbar.php';
+require '../classes/Helper.php';
 
-$obj = new Crud($koneksi);
+$db   = new Database();
+$conn = $db->getConnection();
+$obj  = new Crud($conn);
 
-// CREATE
+// ========= DELETE =========
+if (isset($_GET['delete'])) {
+    $id = $_GET['delete'];
+
+    // hapus gambar juga
+    $res = $conn->query("SELECT image FROM articles WHERE id = '".$conn->real_escape_string($id)."'");
+    if ($res && $row = $res->fetch_assoc()) {
+        if (!empty($row['image'])) {
+            $filePath = '../assets/img/articles/' . $row['image'];
+            if (file_exists($filePath)) {
+                @unlink($filePath);
+            }
+        }
+    }
+
+    $obj->delete('articles', "id = ?", [$id]);
+    echo "<script>window.location='articles.php';</script>";
+    exit;
+}
+
+// ========= CREATE =========
 if (isset($_POST['create'])) {
+    $id = Helper::generateId($conn, 'articles', 'A', 'id');
 
-    // Upload gambar
-    $namaFile = null;
-    if (!empty($_FILES['gambar']['name'])) {
-        $folder = "../uploads/";
-        $namaFile = time() . "-" . $_FILES['gambar']['name'];
-        move_uploaded_file($_FILES['gambar']['tmp_name'], $folder . $namaFile);
+    $imageFileName = null;
+    if (!empty($_FILES['image']['name'])) {
+        $uploadDir  = '../assets/img/articles/';
+        if (!is_dir($uploadDir)) mkdir($uploadDir, 0777, true);
+
+        $ext = pathinfo($_FILES['image']['name'], PATHINFO_EXTENSION);
+        $safeName = strtolower($id);
+        $imageFileName = $safeName . '.' . $ext;
+
+        move_uploaded_file($_FILES['image']['tmp_name'], $uploadDir . $imageFileName);
     }
 
     $data = [
-        'id_article'  => $_POST['id_article'],
-        'id_user'     => $_POST['id_user'],
-        'judul'       => $_POST['judul'],
-        'link'        => $_POST['link'],
-        'id_fase'     => $_POST['id_fase'],
-        'gambar'      => $namaFile    // simpan nama filenya
+        'id'    => $id,
+        'title' => $_POST['title'],
+        'link'  => $_POST['link'],
+        'phase' => !empty($_POST['phase']) ? $_POST['phase'] : null,
+        'image' => $imageFileName
     ];
 
     $obj->create('articles', $data);
-    header("Location: articles.php");
-    exit;
 }
 
-
-// UPDATE
+// ========= UPDATE =========
 if (isset($_POST['update'])) {
-    $id = $_POST['id_article'];
+
+    $id = $_POST['edit_id'];
+    $imageFileName = $_POST['current_image'];
+
+    if (!empty($_FILES['edit_image']['name'])) {
+        $uploadDir  = '../assets/img/articles/';
+        if (!is_dir($uploadDir)) mkdir($uploadDir, 0777, true);
+
+        // hapus gambar lama
+        if (!empty($imageFileName)) {
+            $old = $uploadDir . $imageFileName;
+            if (file_exists($old)) @unlink($old);
+        }
+
+        $ext = pathinfo($_FILES['edit_image']['name'], PATHINFO_EXTENSION);
+        $safeName = strtolower($id);
+        $imageFileName = $safeName . '.' . $ext;
+
+        move_uploaded_file($_FILES['edit_image']['tmp_name'], $uploadDir . $imageFileName);
+    }
+
     $data = [
-        'id_user'     => $_POST['id_user'],
-        'judul'       => $_POST['judul'],
-        'link'        => $_POST['link'],
-        'id_fase'     => $_POST['id_fase']
+        'title' => $_POST['edit_title'],
+        'link'  => $_POST['edit_link'],
+        'phase' => !empty($_POST['edit_phase']) ? $_POST['edit_phase'] : null,
+        'image' => $imageFileName
     ];
-    $obj->update('articles', $data, 'id_article', $id);
-    header("Location: articles.php");
-    exit;
+
+    $obj->update('articles', $data, "id = ?", [$id]);
 }
 
-// DELETE
-if (isset($_GET['delete'])) {
-    $obj->delete('articles', 'id_article', $_GET['delete']);
-    header("Location: articles.php");
-    exit;
-}
+$articles = $obj->readAll('articles');
 
-// READ
-$rows = $obj->readAll('articles');
-$editMode = false;
-$editData = null;
-
-if (isset($_GET['edit'])) {
-    $editMode = true;
-    $editId = $_GET['edit'];
-    $editData = $obj->readById('articles', 'id_article', $editId);
-}
+include '../includes/header.php';
+include '../includes/sidebar.php';
 ?>
 
 <div class="container-fluid">
-    <div class="card mb-3">
+    <h4 class="fw-semibold mb-4">Data Artikel</h4>
+
+    <!-- Form Tambah -->
+    <div class="card mb-4">
         <div class="card-body">
-            <h5 class="card-title fw-semibold mb-4">Manajemen Artikel</h5>
-
-            <!-- FORM -->
-            <div class="card mb-3">
-                <div class="card-body">
-                    <?php if ($editMode && $editData): ?>
-                        <form method="POST" class="row g-2">
-                            <input type="hidden" name="id_article" value="<?= htmlspecialchars($editData['id_article']) ?>">
-                            <div class="col-md-4">
-                                <label class="form-label">ID User</label>
-                                <input class="form-control" name="id_user" required value="<?= htmlspecialchars($editData['id_user']) ?>">
-                            </div>
-                            <div class="col-md-4">
-                                <label class="form-label">Judul</label>
-                                <input class="form-control" name="judul" required value="<?= htmlspecialchars($editData['judul']) ?>">
-                            </div>
-                            <div class="col-md-4">
-                                <label class="form-label">Link</label>
-                                <input class="form-control" name="link" required value="<?= htmlspecialchars($editData['link']) ?>">
-                            </div>
-                            
-                            <div class="col-md-4">
-                                <label class="form-label">ID Fase</label>
-                                <input class="form-control" name="id_fase" required value="<?= htmlspecialchars($editData['id_fase']) ?>">
-                            </div>
-                            <div class="col-12 mt-2">
-                                <button class="btn btn-success" type="submit" name="update">Simpan Perubahan</button>
-                                <a href="articles.php" class="btn btn-secondary">Batal</a>
-                            </div>
-                        </form>
-                    <?php else: ?>
-                        <form method="POST" enctype="multipart/form-data" class="row g-2">
-                            <div class="col-md-4">
-                                <label class="form-label">ID Artikel</label>
-                                <input class="form-control" name="id_article" required placeholder="ex: A0001">
-                            </div>
-                            <div class="col-md-4">
-                                <label class="form-label">ID User</label>
-                                <input class="form-control" name="id_user" required placeholder="User ID">
-                            </div>
-                            <div class="col-md-4">
-                                <label class="form-label">Judul</label>
-                                <input class="form-control" name="judul" required placeholder="Judul artikel">
-                            </div>
-                            <div class="col-md-4">
-                                <label class="form-label">Gambar</label>
-                                <input  class="form-control" type="file" name="gambar" accept="image/*">
-                            </div>
-                            <div class="col-md-4">
-                                <label class="form-label">Link</label>
-                                <input class="form-control" name="link" required placeholder="https://...">
-                            </div>
-                            
-                            <div class="col-md-4">
-                                <label class="form-label">ID Fase</label>
-                                <input class="form-control" name="id_fase" required placeholder="Fase ID">
-                            </div>
-                            <div class="col-12 mt-2">
-                                <button class="btn btn-primary" type="submit" name="create">Tambah Artikel</button>
-                            </div>
-                        </form>
-                    <?php endif; ?>
+            <form method="POST" class="row g-3" enctype="multipart/form-data">
+                <div class="col-md-3">
+                    <input type="text" name="title" class="form-control" placeholder="Judul artikel" required>
                 </div>
-            </div>
 
-            <!-- TABEL -->
-            <div class="card">
-                <div class="card-body">
-                    <table class="table table-bordered table-striped">
-                        <thead>
-                            <tr>
-                                <th>ID Artikel</th>
-                                <th>ID User</th>
-                                <th>Judul</th>
-                                <th>Gambar</th>
-                                <th>Link</th>
-                                <th>Fase Siklus</th>
-                                <th>Diunggah</th>
-                                <th>Aksi</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php if (!empty($rows)): ?>
-                                <?php foreach ($rows as $r): ?>
-                                    <tr>
-                                        <td><?= htmlspecialchars($r['id_article']) ?></td>
-                                        <td><?= htmlspecialchars($r['id_user']) ?></td>
+                <div class="col-md-4">
+                    <input type="text" name="link" class="form-control" placeholder="Link artikel" required>
+                </div>
 
-                                        <td><?= htmlspecialchars($r['judul']) ?></td>
+                <div class="col-md-2">
+                    <select name="phase" class="form-control">
+                        <option value="">Fase (opsional)</option>
+                        <option value="menstruasi">Menstruasi</option>
+                        <option value="folikular">Folikular</option>
+                        <option value="ovulasi">Ovulasi</option>
+                        <option value="luteal">Luteal</option>
+                    </select>
+                </div>
 
-                                        <!-- Gambar -->
-                                        <td>
-                                            <?php if (!empty($r['gambar'])): ?>
-                                                <img src="/EVEE0.2/uploads/<?= htmlspecialchars($r['gambar']) ?>" width="60" alt="">
-                                            <?php else: ?>
-                                                <span class="text-muted">-</span>
-                                            <?php endif; ?>
-                                        </td>
+                <div class="col-md-2">
+                    <input type="file" name="image" class="form-control" accept="image/png,image/jpeg">
+                </div>
 
+                <div class="col-md-1">
+                    <button class="btn btn-primary w-100" name="create">Tambah</button>
+                </div>
+            </form>
+        </div>
+    </div>
 
-                                        <!-- Link -->
-                                        <td><a href="<?= htmlspecialchars($r['link']) ?>" target="_blank">Buka</a></td>
+    <!-- Tabel Artikel -->
+    <div class="card">
+        <div class="card-body">
+            <table class="table table-bordered align-middle">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Gambar</th>
+                        <th>Judul</th>
+                        <th>Fase</th>
+                        <th>Link</th>
+                        <th>Aksi</th>
+                    </tr>
+                </thead>
+                <tbody>
+                <?php foreach ($articles as $a): ?>
+                    <tr>
+                        <td><?= $a['id'] ?></td>
 
-                                        <!-- Fase -->
-                                        <td><?= htmlspecialchars($r['id_fase']) ?></td>
-                                        <td><?= htmlspecialchars($r['created_at']) ?></td>
-
-                                        <td>
-                                            <a href="?edit=<?= urlencode($r['id_article']) ?>" class="btn btn-sm btn-warning">Edit</a>
-                                            <a href="?delete=<?= urlencode($r['id_article']) ?>" class="btn btn-sm btn-danger" onclick="return confirm('Hapus data ini?')">Hapus</a>
-                                        </td>
-                                    </tr>
-                                <?php endforeach; ?>
+                        <td>
+                            <?php if ($a['image']): ?>
+                                <img src="../assets/img/articles/<?= $a['image'] ?>" style="height:60px;">
                             <?php else: ?>
-                                <tr><td colspan="7" class="text-center">Belum ada data</td></tr>
+                                <em>-</em>
                             <?php endif; ?>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
+                        </td>
 
+                        <td><?= htmlspecialchars($a['title']) ?></td>
+                        <td><?= htmlspecialchars($a['phase']) ?></td>
+                        <td>
+                            <a href="<?= htmlspecialchars($a['link']) ?>" target="_blank">
+                                <?= htmlspecialchars($a['link']) ?>
+                            </a>
+                        </td>
+
+                        <td>
+                            <button class="btn btn-warning btn-sm" data-bs-toggle="modal"
+                                    data-bs-target="#editModal<?= $a['id'] ?>">Edit</button>
+
+                            <a href="articles.php?delete=<?= $a['id'] ?>"
+                               onclick="return confirm('Hapus artikel ini?')"
+                               class="btn btn-danger btn-sm">Hapus</a>
+                        </td>
+                    </tr>
+
+                    <!-- Modal Edit -->
+                    <div class="modal fade" id="editModal<?= $a['id'] ?>">
+                      <div class="modal-dialog">
+                        <form method="POST" enctype="multipart/form-data" class="modal-content">
+
+                          <div class="modal-header">
+                            <h5 class="modal-title">Edit Artikel</h5>
+                            <button class="btn-close" data-bs-dismiss="modal"></button>
+                          </div>
+
+                          <div class="modal-body">
+                            <input type="hidden" name="edit_id" value="<?= $a['id'] ?>">
+                            <input type="hidden" name="current_image" value="<?= $a['image'] ?>">
+
+                            <label>Judul</label>
+                            <input type="text" class="form-control mb-2"
+                                   name="edit_title" value="<?= htmlspecialchars($a['title']) ?>" required>
+
+                            <label>Link</label>
+                            <input type="text" class="form-control mb-2"
+                                   name="edit_link" value="<?= htmlspecialchars($a['link']) ?>" required>
+
+                            <label>Fase</label>
+                            <select name="edit_phase" class="form-control mb-2">
+                                <option value="" <?= $a['phase']==''?'selected':'' ?>>Tidak ada</option>
+                                <option value="menstruasi" <?= $a['phase']=='menstruasi'?'selected':'' ?>>Menstruasi</option>
+                                <option value="folikular"  <?= $a['phase']=='folikular'?'selected':'' ?>>Folikular</option>
+                                <option value="ovulasi"    <?= $a['phase']=='ovulasi'?'selected':'' ?>>Ovulasi</option>
+                                <option value="luteal"     <?= $a['phase']=='luteal'?'selected':'' ?>>Luteal</option>
+                            </select>
+
+                            <label>Gambar saat ini</label><br>
+                            <?php if ($a['image']): ?>
+                                <img src="../assets/img/articles/<?= $a['image'] ?>" style="height:80px;">
+                            <?php else: ?>
+                                <em>Belum ada gambar</em>
+                            <?php endif; ?>
+                            <br><br>
+
+                            <label>Ganti Gambar (opsional)</label>
+                            <input type="file" name="edit_image" class="form-control"
+                                   accept="image/png,image/jpeg">
+                          </div>
+
+                          <div class="modal-footer">
+                            <button type="submit" name="update" class="btn btn-primary">Simpan</button>
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                          </div>
+
+                        </form>
+                      </div>
+                    </div>
+
+                <?php endforeach; ?>
+                </tbody>
+
+            </table>
         </div>
     </div>
 </div>
