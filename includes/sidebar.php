@@ -51,7 +51,7 @@
             <li class="sidebar-item">
               <a class="sidebar-link" href="../pages/articles.php" aria-expanded="false">
                 <span>
-                  <i class="ti ti-news"></i>
+                  <i class="ti ti-article"></i>
                 </span>
                 <span class="hide-menu">articles</span>
               </a>
@@ -90,6 +90,34 @@
                   <i class="ti ti-bell"></i>
                 </span>
                 <span class="hide-menu">notification</span>
+              </a>
+            </li>
+            <li class="nav-small-cap">
+              <i class="ti ti-dots nav-small-cap-icon fs-4"></i>
+              <span class="hide-menu">Log</span>
+            </li>
+            <li class="sidebar-item">
+              <a class="sidebar-link" href="../pages/mood_logs.php" aria-expanded="false">
+                <span>
+                  <i class="ti ti-mood-check"></i>
+                </span>
+                <span class="hide-menu">log mood</span>
+              </a>
+            </li>
+            <li class="sidebar-item">
+              <a class="sidebar-link" href="../pages/day_logs.php" aria-expanded="false">
+                <span>
+                  <i class="ti ti-calendar-clock"></i>
+                </span>
+                <span class="hide-menu">log hari</span>
+              </a>
+            </li>
+            <li class="sidebar-item">
+              <a class="sidebar-link" href="../pages/user_articles.php" aria-expanded="false">
+                <span>
+                  <i class="ti ti-news"></i>
+                </span>
+                <span class="hide-menu">user article</span>
               </a>
             </li>
 
