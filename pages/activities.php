@@ -17,10 +17,13 @@ $activities = $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
 
 include '../includes/header.php';
 include '../includes/sidebar.php';
+include '../includes/topbar.php';
 ?>
 
 <div class="container-fluid">
-    <h4 class="fw-semibold mb-4">Kegiatan User</h4>
+    <div class="card">
+        <div class="card-body">
+            <h4 class="fw-semibold mb-4">Kegiatan User</h4>
 
     <div class="card">
         <div class="card-body">
@@ -61,6 +64,8 @@ include '../includes/sidebar.php';
                 <?php endif; ?>
                 </tbody>
             </table>
+        </div>
+    </div>
         </div>
     </div>
 </div>

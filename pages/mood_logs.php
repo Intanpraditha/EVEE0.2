@@ -21,45 +21,50 @@ $moodLogs  = $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
 
 include '../includes/header.php';
 include '../includes/sidebar.php';
+include '../includes/topbar.php';
 ?>
 
 <div class="container-fluid">
-    <h4 class="fw-semibold mb-4">Riwayat Mood User</h4>
-
     <div class="card">
         <div class="card-body">
-            <table class="table table-bordered table-striped align-middle">
-                <thead>
-                    <tr>
-                        <th>Tanggal</th>
-                        <th>Waktu</th>
-                        <th>User</th>
-                        <th>Mood</th>
-                        <th>Tag</th>
-                        <th>Catatan</th>
-                        <th>Dibuat</th>
-                    </tr>
-                </thead>
-                <tbody>
-                <?php if (empty($moodLogs)): ?>
-                    <tr><td colspan="7" class="text-center">Belum ada data</td></tr>
-                <?php else: ?>
-                    <?php foreach ($moodLogs as $row): ?>
-                        <tr>
-                            <td><?= htmlspecialchars($row['date']) ?></td>
-                            <td><?= htmlspecialchars($row['time']) ?></td>
-                            <td><?= htmlspecialchars($row['user_name']) ?> (<?= htmlspecialchars($row['user_id']) ?>)</td>
-                            <td><?= htmlspecialchars($row['mood_name']) ?></td>
-                            <td><?= htmlspecialchars($row['mood_tag']) ?></td>
-                            <td style="max-width:250px; white-space:pre-wrap;">
-                                <?= htmlspecialchars($row['note']) ?>
-                            </td>
-                            <td><?= htmlspecialchars($row['created_at']) ?></td>
-                        </tr>
-                    <?php endforeach; ?>
-                <?php endif; ?>
-                </tbody>
-            </table>
+            <h4 class="fw-semibold mb-4">Riwayat Mood User</h4>
+
+            <div class="card">
+                <div class="card-body">
+                    <table class="table table-bordered table-striped align-middle">
+                        <thead>
+                            <tr>
+                                <th>Tanggal</th>
+                                <th>Waktu</th>
+                                <th>User</th>
+                                <th>Mood</th>
+                                <th>Tag</th>
+                                <th>Catatan</th>
+                                <th>Dibuat</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        <?php if (empty($moodLogs)): ?>
+                            <tr><td colspan="7" class="text-center">Belum ada data</td></tr>
+                        <?php else: ?>
+                            <?php foreach ($moodLogs as $row): ?>
+                                <tr>
+                                    <td><?= htmlspecialchars($row['date']) ?></td>
+                                    <td><?= htmlspecialchars($row['time']) ?></td>
+                                    <td><?= htmlspecialchars($row['user_name']) ?> (<?= htmlspecialchars($row['user_id']) ?>)</td>
+                                    <td><?= htmlspecialchars($row['mood_name']) ?></td>
+                                    <td><?= htmlspecialchars($row['mood_tag']) ?></td>
+                                    <td style="max-width:250px; white-space:pre-wrap;">
+                                        <?= htmlspecialchars($row['note']) ?>
+                                    </td>
+                                    <td><?= htmlspecialchars($row['created_at']) ?></td>
+                                </tr>
+                            <?php endforeach; ?>
+                        <?php endif; ?>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         </div>
     </div>
 </div>
