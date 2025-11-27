@@ -1,4 +1,5 @@
 <?php
+require '../includes/check_login.php';
 require '../classes/Database.php';
 require '../classes/Crud.php';
 

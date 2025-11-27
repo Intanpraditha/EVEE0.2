@@ -1,10 +1,20 @@
+<?php
+session_start();
+
+// jika sudah login → lempar ke dashboard
+if (isset($_SESSION['admin_id'])) {
+    header("Location: pages/dashboard.php");
+    exit;
+}
+?>
+
 <!doctype html>
 <html lang="en">
 
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Modernize Free</title>
+  <title>Evee</title>
   <link rel="shortcut icon" type="image/png" href="assets/images/logos/logo-icon.png" />
   <link rel="stylesheet" href="assets/css/styles.min.css" />
 </head>
@@ -24,18 +34,22 @@
                   <img src="assets/images/logos/logo- text-default.png" width="180" alt="">
                 </a>
                 
-                <form>
-                  <div class="mb-3">
-                    <label for="exampleInputEmail1" class="form-label">Username</label>
-                    <input type="email" class="form-control" id="exampleInputEmail1" aria-describedby="emailHelp">
-                  </div>
-                  <div class="mb-4">
-                    <label for="exampleInputPassword1" class="form-label">Password</label>
-                    <input type="password" class="form-control" id="exampleInputPassword1">
-                  </div>
-                  
-                  <a href="pages/dashboard.php" class="btn btn-primary w-100 py-8 fs-4 mb-4 rounded-2">Log In</a>
-                  
+                <?php if (isset($_GET['error'])): ?>
+                    <div class="alert alert-danger py-2 small"><?= htmlspecialchars($_GET['error']) ?></div>
+                <?php endif; ?>
+
+                <form method="POST" action="auth.php">
+                    <div class="mb-3">
+                        <label class="form-label small">Email</label>
+                        <input type="email" name="email" class="form-control" required autofocus>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label small">Password</label>
+                        <input type="password" name="password" class="form-control" required>
+                    </div>
+
+                    <button class="btn btn-primary w-100">Login</button>
                 </form>
               </div>
             </div>
