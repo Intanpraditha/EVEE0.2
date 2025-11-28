@@ -41,22 +41,22 @@
         <div class="navbar-collapse collapse" id="navbarContent">
           <ul class="navbar-nav ml-auto">
             <li class="nav-item">
-              <a class="nav-link" href="#home-banner" data-role="smoothscroll">Home</a>
+              <a class="nav-link" href="#home-banner" data-role="smoothscroll">Beranda</a>
             </li>
             <li class="nav-item">
-              <a class="nav-link" href="#features" data-role="smoothscroll">Features</a>
+              <a class="nav-link" href="#features" data-role="smoothscroll">Fitur</a>
             </li>
             <li class="nav-item">
-              <a class="nav-link" href="#about" data-role="smoothscroll">About</a>
+              <a class="nav-link" href="#about" data-role="smoothscroll">Tentang</a>
             </li>
             <li class="nav-item">
-              <a class="nav-link" href="#period-check" data-role="smoothscroll">Period predict</a>
+              <a class="nav-link" href="#period-check" data-role="smoothscroll">Prediksi Menstruasi</a>
             </li>
             <li class="nav-item">
-              <a class="nav-link" href="#reviews" data-role="smoothscroll">Reviews</a>
+              <a class="nav-link" href="#reviews" data-role="smoothscroll">Ulasan</a>
             </li>
             <li class="nav-item">
-              <a class="nav-link" href="#article" data-role="smoothscroll">Articles</a>
+              <a class="nav-link" href="#article" data-role="smoothscroll">Artikel</a>
             </li>
             <li class="nav-item">
               <a class="btn btn-primary ml-lg-2" href="login.php">Login</a>
@@ -71,9 +71,9 @@
       <div class="page-banner home-banner" id="home-banner">
         <div class="row align-items-center flex-wrap-reverse h-100">
           <div class="col-md-6 py-5 wow fadeInLeft">
-            <h1 class="mb-4">Your period bestie🌸</h1>
-            <p class="text-lg text-grey mb-5">Made for girly girls, tracking your cycle, sync with your activity, and prioritize your well being</p>
-            <a href="#" class="btn btn-primary">Download App</a>
+            <h1 class="mb-4">Teman menstruasimu🌸</h1>
+            <p class="text-lg text-grey mb-5">Dibuat untuk para perempuan, membantu melacak siklusmu, sinkron dengan aktivitas harian, dan memprioritaskan kesejahteraanmu.</p>
+            <a href="#" class="btn btn-primary">Unduh Aplikasi</a>
           </div>
           <div class="col-md-6 py-5 wow zoomIn">
             <div class="img-fluid text-center">
@@ -89,8 +89,8 @@
   <div class="page-section" id="features">
     <div class="container">
       <div class="text-center wow fadeInUp">
-        <div class="subhead">Features</div>
-        <h2 class="title-section">Everything you need to stay in sync with your body and activity</h2>
+        <div class="subhead">fitur</div>
+        <h2 class="title-section">Semua yang dibutuhkan untuk tetap selaras dengan tubuh dan aktivitasmu.</h2>
         <div class="divider mx-auto"></div>
       </div>
       <div class="row">
@@ -100,8 +100,8 @@
               <img src="assets/assets-landing/img/services/service (1).png" alt="">
             </div>
             <div class="body">
-              <h5 class="text-secondary">Smart Period Tracker</h5>
-              <p>Powered predictions that learn from your unique cycle patterns</p>
+              <h5 class="text-secondary">Pelacak Menstruasi Cerdas</h5>
+              <p>Prediksi yang didukung oleh teknologi yang belajar dari pola siklus unikmu.</p>
               
             </div>
           </div>
@@ -112,8 +112,8 @@
               <img src="assets/assets-landing/img/services/service (2).png" alt="">
             </div>
             <div class="body">
-              <h5 class="text-secondary">Mood & Self-care</h5>
-              <p>Track your wellbeing and get personalized self-care suggestions</p>
+              <h5 class="text-secondary"> Mood & Perawatan Diri</h5>
+              <p>Pantau kesehatan fisik dan mentalmu, dan dapatkan saran yang sesuai dengan kebutuhanmu.</p>
               
             </div>
           </div>
@@ -124,8 +124,8 @@
               <img src="assets/assets-landing/img/services/service (3).png" alt="">
             </div>
             <div class="body">
-              <h5 class="text-secondary">Sync with Activity Schedule</h5>
-              <p>Never miss important events with integrated calendar sync</p>
+              <h5 class="text-secondary">Sinkronkan dengan Jadwal Kegiatan</h5>
+              <p>Jangan pernah melewatkan acara penting dengan sinkronisasi kalender terintegrasi.</p>
               
             </div>
           </div>
@@ -138,13 +138,13 @@
     <div class="container">
       <div class="row align-items-center">
         <div class="col-lg-6 py-3 wow fadeInUp">
-          <span class="subhead">About us</span>
+          <span class="subhead">Tentang Kami</span>
           <h2 class="title-section">Kami Mengerti Kamu</h2>
           <div class="divider"></div>
 
           <p>EVEE hadir untuk membantu perempuan memahami tubuhnya dengan mudah dan nyaman.</p>
           <p>Kami menggabungkan smart period tracking, mood monitoring, dan tips kesehatan yang dipersonalisasi, sehingga kamu bisa tetap produktif sambil menjaga keseimbangan diri. Semua data tersimpan aman — EVEE adalah teman yang selalu kamu butuhkan.</p>
-          <a href="about.html" class="btn btn-primary mt-3">Read More</a>
+          <a href="about.html" class="btn btn-primary mt-3">Baca Selengkapnya</a>
         </div>
         <div class="col-lg-6 py-3 wow fadeInRight">
           <div class="img-fluid py-3 text-center">
@@ -162,8 +162,8 @@
       <div class="container text-center">
         <div class="row justify-content-center wow fadeInUp">
           <div class="col-lg-8">
-            <h2 class="title">Period predict</h2>
-            <p class="subtitle">Check your next period</p>
+            <h2 class="title">Prediksi Menstruasi</h2>
+            <p class="subtitle">Periksa periode menstruasimu berikutnya</p>
             <div class="predict-inputs">
               <input id="day" type="number" placeholder="DD" maxlength="2">
               <span class="slash">/</span>
@@ -176,8 +176,8 @@
 
               <input type="date" id="hiddenDate" style="display:none;">
             </div>
-            <button class="check-btn" onclick="checkPeriod()">check</button>
-            <button class="btn-refresh" onclick="resetForm()">Refresh</button>
+            <button class="check-btn" onclick="checkPeriod()">periksa</button>
+            <button class="btn-refresh" onclick="resetForm()"><i class="ti ti-refresh"></i></button>
 
             <p id="resultText" style="margin-top:20px; font-weight:500; font-size:18px; color:#8A0D3A;"></p>
           </div>
@@ -212,8 +212,8 @@
   <div class="page-section" id="reviews">
   <div class="container">
     <div class="text-center wow fadeInUp">
-      <div class="subhead">User Reviews</div>
-      <h2 class="title-section">What They Say About EVEE</h2>
+      <div class="subhead">Ulasan Pengguna</div>
+      <h2 class="title-section">Apa yang mereka katakan tentang EVEE</h2>
       <div class="divider mx-auto"></div>
     </div>
 
@@ -307,8 +307,8 @@
   <div class="page-section" id="article">
     <div class="container">
       <div class="text-center wow fadeInUp">
-        <div class="subhead">Articles</div>
-        <h2 class="title-section">Read Latest News</h2>
+        <div class="subhead">Artikel</div>
+        <h2 class="title-section">Baca Berika terkini</h2>
         <div class="divider mx-auto"></div>
       </div>
 
@@ -356,7 +356,7 @@
         </div>
 
         <div class="col-12 mt-4 text-center wow fadeInUp">
-          <a href="#home-banner" class="btn btn-primary" data-role="smoothscroll">View More</a>
+          <a href="#home-banner" class="btn btn-primary" data-role="smoothscroll">Lihat selengkapnya</a>
         </div>
       </div>
     </div>
@@ -367,7 +367,7 @@
       <div class="row mb-5">
         <div class="col-lg-8 py-3">
           <h3>EVEE</h3>
-          <p>Made for girly girls, tracking your cycle, sync with your activity, <br> and prioritize your well being.</p>
+          <p>Dibuat untuk para perempuan, membantu melacak siklusmu, <br> sinkron dengan aktivitas harian, dan memprioritaskan kesejahteraanmu.</p>
 
           <div class="social-media-button">
             <!-- <a href="#"><span class="mai-logo-facebook-f"></span></a>
@@ -379,7 +379,7 @@
         </div>
         
         <div class="col-lg-3 py-3">
-          <h5>Contact Us</h5>
+          <h5>Kontak kami</h5>
           <p>Jember, Jawa timur, Indonesia</p>
           <a href="#" class="footer-link">+62 85706298928</a>
           <a href="#" class="footer-link">eveapp@gmail.com</a>
@@ -387,7 +387,7 @@
         
       </div>
 
-      <p class="text-center" id="copyright">Copyright &copy; 2025. develop by <a href="https://www.youtube.com/watch?v=xvFZjo5PgG0" target="_blank">Grub kecil kecilan</a></p>
+      <p class="text-center" id="copyright">Copyright &copy; 2025. dikembangkan oleh <a href="https://www.youtube.com/watch?v=xvFZjo5PgG0" target="_blank">Grub kecil kecilan</a></p>
     </div>
   </footer>
 
