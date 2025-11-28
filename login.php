@@ -48,8 +48,11 @@ if (isset($_SESSION['admin_id'])) {
                         <label class="form-label small">Password</label>
                         <input type="password" name="password" class="form-control" required>
                     </div>
-
                     <button class="btn btn-primary w-100">Login</button>
+                    <div class="text-center m-3">
+                        Belum punya akun? <a href="register.php">Daftar</a>
+                    </div>
+
                 </form>
               </div>
             </div>
