@@ -4,7 +4,7 @@ class Database
     private $host = "localhost";
     private $user = "root";
     private $pass = "";
-    private $dbname = "evee_new"; // ganti sesuai nama database kamu
+    private $dbname = "evee_new";
 
     private $conn;
 
