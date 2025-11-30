@@ -1,3 +1,44 @@
+<?php
+
+
+require 'classes/Database.php';
+
+$db   = new Database();
+$conn = $db->getConnection();
+
+/* ===== ARTIKEL UNTUK LANDING (3 TERBARU) ===== */
+$landingArticles = [];
+$res = $conn->query("
+    SELECT id, title, link, phase, image, created_at 
+    FROM articles
+    ORDER BY created_at DESC
+    LIMIT 3
+");
+if ($res) {
+    $landingArticles = $res->fetch_all(MYSQLI_ASSOC);
+}
+
+/* ===== AMBIL ULASAN USER ===== */
+$landingReviews = [];
+$res = $conn->query("
+    SELECT 
+        COALESCE(r.display_name, u.name) AS name,
+        r.rating,
+        r.review_text,
+        r.created_at
+    FROM reviews r
+    JOIN users u ON u.id = r.user_id
+    WHERE r.status = 'approved'
+    ORDER BY r.created_at DESC
+    LIMIT 3
+");
+if ($res) {
+    $landingReviews = $res->fetch_all(MYSQLI_ASSOC);
+}
+
+
+?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -144,7 +185,7 @@
 
           <p>EVEE hadir untuk membantu perempuan memahami tubuhnya dengan mudah dan nyaman.</p>
           <p>Kami menggabungkan smart period tracking, mood monitoring, dan tips kesehatan yang dipersonalisasi, sehingga kamu bisa tetap produktif sambil menjaga keseimbangan diri. Semua data tersimpan aman — EVEE adalah teman yang selalu kamu butuhkan.</p>
-          <a href="about.html" class="btn btn-primary mt-3">Baca Selengkapnya</a>
+          <!-- <a href="about.html" class="btn btn-primary mt-3">Baca Selengkapnya</a> -->
         </div>
         <div class="col-lg-6 py-3 wow fadeInRight">
           <div class="img-fluid py-3 text-center">
@@ -216,59 +257,37 @@
       <h2 class="title-section">Apa yang mereka katakan tentang EVEE</h2>
       <div class="divider mx-auto"></div>
     </div>
-
     <div class="row mt-5">
-
-      <!-- Review 1 -->
-      <div class="col-lg-4 py-3 wow fadeInUp">
-        <div class="review-bubble">
-          <div class="review-text">
-            “EVEE bikin aku lebih ngerti siklus sendiri. Reminder mood-nya lucu banget!”
-          </div>
-          <div class="review-user">
-            <img src="assets/assets-landing/img/review/avatar1.jpg" alt="">
-            <div>
-              <h6>Ayu, 20</h6>
-              <span class="stars">★★★★★</span>
+      <?php if (empty($landingReviews)): ?>
+        <div class="col-12 text-center text-muted">
+          Belum ada ulasan.
+        </div>
+      <?php else: ?>
+        <?php foreach ($landingReviews as $rev): ?>
+          <div class="col-lg-4 py-3 wow fadeInUp">
+            <div class="review-bubble">
+              <div class="review-text">
+                “<?= htmlspecialchars($rev['review_text']) ?>”
+              </div>
+              <div class="review-user">
+                <!-- <img src="assets/assets-landing/img/review/default.png" alt="">  -->
+                <div>
+                  <h6><?= htmlspecialchars($rev['name']) ?></h6>
+                  <span class="stars">
+                    <?php for ($i = 0; $i < $rev['rating']; $i++) echo "★"; ?>
+                  </span>
+                </div>
+              </div>
             </div>
           </div>
-        </div>
-      </div>
-
-      <!-- Review 2 -->
-      <div class="col-lg-4 py-3 wow fadeInUp">
-        <div class="review-bubble">
-          <div class="review-text">
-            “Desainnya soft dan girly. Calendar sync-nya berguna banget buat kampus.”
-          </div>
-          <div class="review-user">
-            <img src="assets/assets-landing/img/review/avatar1.jpg" alt="">
-            <div>
-              <h6>Nisa, 22</h6>
-              <span class="stars">★★★★★</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Review 3 -->
-      <div class="col-lg-4 py-3 wow fadeInUp">
-        <div class="review-bubble">
-          <div class="review-text">
-            “Favoritku fitur mood! Emot maskot EVEE-nya gemes banget.”
-          </div>
-          <div class="review-user">
-            <img src="assets/assets-landing/img/review/avatar1.jpg" alt="">
-            <div>
-              <h6>Bella, 19</h6>
-              <span class="stars">★★★★★</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
+        <?php endforeach; ?>
+      <?php endif; ?>
     </div>
+
   </div>
+  <div class="col-12 mt-4 text-center wow fadeInUp">
+          <a href="list_reviews.php" class="btn btn-primary">Lihat selengkapnya</a>
+        </div>
 </div>
 
 
@@ -313,52 +332,46 @@
       </div>
 
       <div class="row mt-5">
-        <div class="col-lg-4 py-3 wow fadeInUp">
-          <div class="card-blog">
-            <div class="header">
-              <div class="post-thumb">
-                <img src="assets/assets-landing/img/blog/blog-1.jpg" alt="">
+        <?php if (empty($landingArticles)): ?>
+          <div class="col-12 text-center text-muted">
+            Belum ada artikel.
+          </div>
+        <?php else: ?>
+          <?php foreach ($landingArticles as $art): ?>
+            <div class="col-lg-4 py-3 wow fadeInUp">
+              <div class="card-blog">
+                <div class="header">
+                  <div class="post-thumb">
+                    <?php if (!empty($art['image'])): ?>
+                      <img src="assets/img/articles/<?= htmlspecialchars($art['image']) ?>" alt="">
+                    <?php else: ?>
+                      <img src="assets/assets-landing/img/blog/blog-1.jpg" alt="">
+                    <?php endif; ?>
+                  </div>
+                </div>
+                <div class="body">
+                  <h5 class="post-title">
+                    <a href="<?= htmlspecialchars($art['link']) ?>" target="_blank">
+                      <?= htmlspecialchars($art['title']) ?>
+                    </a>
+                  </h5>
+                  <div class="post-date">
+                    Posted on 
+                    <a href="#">
+                      <?= date('d M Y', strtotime($art['created_at'])) ?>
+                    </a>
+                  </div>
+                </div>
               </div>
             </div>
-            <div class="body">
-              <h5 class="post-title"><a href="https://www.youtube.com/watch?v=xvFZjo5PgG0">8 Makanan Saat Haid yang Baik untuk Dikonsumsi</a></h5>
-              <div class="post-date">Posted on <a href="#">19 Aug 2025</a></div>
-            </div>
-          </div>
-        </div>
-        
-        <div class="col-lg-4 py-3 wow fadeInUp">
-          <div class="card-blog">
-            <div class="header">
-              <div class="post-thumb">
-                <img src="assets/assets-landing/img/blog/blog-1.jpg" alt="">
-              </div>
-            </div>
-            <div class="body">
-              <h5 class="post-title"><a href="https://www.youtube.com/watch?v=xvFZjo5PgG0">8 Makanan Saat Haid yang Baik untuk Dikonsumsi</a></h5>
-              <div class="post-date">Posted on <a href="#">19 Aug 2025</a></div>
-            </div>
-          </div>
-        </div>
-
-        <div class="col-lg-4 py-3 wow fadeInUp">
-          <div class="card-blog">
-            <div class="header">
-              <div class="post-thumb">
-                <img src="assets/assets-landing/img/blog/blog-1.jpg" alt="">
-              </div>
-            </div>
-            <div class="body">
-              <h5 class="post-title"><a href="https://www.youtube.com/watch?v=xvFZjo5PgG0">8 Makanan Saat Haid yang Baik untuk Dikonsumsi</a></h5>
-              <div class="post-date">Posted on <a href="#">19 Aug 2025</a></div>
-            </div>
-          </div>
-        </div>
+          <?php endforeach; ?>
+        <?php endif; ?>
 
         <div class="col-12 mt-4 text-center wow fadeInUp">
-          <a href="#home-banner" class="btn btn-primary" data-role="smoothscroll">Lihat selengkapnya</a>
+          <a href="list_articles.php" class="btn btn-primary">Lihat selengkapnya</a>
         </div>
       </div>
+
     </div>
   </div>
 
@@ -373,7 +386,7 @@
             <!-- <a href="#"><span class="mai-logo-facebook-f"></span></a>
             <a href="#"><span class="mai-logo-twitter"></span></a>
             <a href="#"><span class="mai-logo-google-plus-g"></span></a> -->
-            <a href="#"><span class="mai-logo-instagram"></span></a>
+            <a href="https://www.instagram.com/evee.app/"><span class="mai-logo-instagram"></span></a>
             <a href="#"><span class="mai-logo-youtube"></span></a>
           </div>
         </div>
