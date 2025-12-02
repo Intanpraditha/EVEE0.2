@@ -25,14 +25,18 @@ $id = uniqid('U'); // atau pakai Helper::generateId(...)
 
 $hash = password_hash($password, PASSWORD_BCRYPT);
 
-$sql = "INSERT INTO users (id, name, email, password, role, created_at)
-        VALUES (?, ?, ?, ?, 'user', NOW())";
+$sql = "INSERT INTO users (id, name, email, password, role,birth_date, created_at)
+        VALUES (?, ?, ?, ?, 'user',NULL, NOW())";
 $stmt = $conn->prepare($sql);
 $stmt->bind_param('ssss', $id, $name, $email, $hash);
 
 if (!$stmt->execute()) {
-    jsonResponse(500, ['success' => false, 'error' => 'Gagal registrasi']);
+    jsonResponse(500, [
+        'success' => false,
+        'error'   => 'Gagal registrasi: ' . $stmt->error
+    ]);
 }
+
 
 jsonResponse(201, [
     'success' => true,
