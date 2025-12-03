@@ -25,7 +25,7 @@ if ($resUser->num_rows === 0) {
 }
 $user = $resUser->fetch_assoc();
 
-/* 2. PROFIL SIKLUS dari period_cycles */
+/* 2. PROFIL SIKLUS dari period_cycles (log terakhir) */
 $stmt = $conn->prepare("
     SELECT start_date AS last_period_start,
            period_length,
@@ -43,29 +43,53 @@ $profile = $resProfile->fetch_assoc();
 /* Jika belum ada data siklus */
 if (!$profile || empty($profile['last_period_start'])) {
     jsonResponse(200, [
-        'success' => true,
-        'needs_screening' => true,
-        'message' => 'Belum ada data siklus',
-        'user' => $user,
-        'cycle' => null,
-        'today_mood' => null,
-        'upcoming_activities' => [],
-        'recommended_articles' => []
+        'success'            => true,
+        'needs_screening'    => true,
+        'message'            => 'Belum ada data siklus',
+        'user'               => $user,
+        'cycle'              => null,
+        'today_mood'         => null,
+        'upcoming_activities'=> [],
+        'recommended_articles'=> []
     ]);
 }
 
-/* 3. HITUNG SIKLUS */
-$last_start     = $profile['last_period_start'];
-$period_length  = (int)$profile['period_length'];
-$cycle_range    = (int)$profile['cycle_length_range'];
+/* 3. HITUNG SIKLUS + HARI MENUJU MENSTRUASI */
+$last_start    = $profile['last_period_start'];
+$period_length = (int)$profile['period_length'];          // lama haid
+$cycle_range   = (int)$profile['cycle_length_range'];     // panjang siklus (hari)
 
-$lastStart      = new DateTime($last_start);
-$today          = new DateTime();
-$cycleDay       = $lastStart->diff($today)->days + 1;
+// fallback kalau kosong / 0
+if ($cycle_range <= 0) {
+    $cycle_range = 28;
+}
 
-$nextStart      = clone $lastStart;
-$nextStart->modify("+$cycle_range days");
-$nextPeriodStr  = $nextStart->format("Y-m-d");
+$lastStart = new DateTime($last_start);
+$today     = new DateTime();
+
+// jumlah hari sejak haid terakhir (1 = hari pertama haid)
+$totalDiffDays = $lastStart->diff($today)->days + 1;
+
+// normalisasi ke dalam satu siklus
+// misal diff=45, cycle_range=28 → cycle_day = 18
+$cycleDay = (($totalDiffDays - 1) % $cycle_range) + 1;
+
+// lagi haid atau tidak
+$isMenstruating = ($cycleDay >= 1 && $cycleDay <= $period_length);
+
+// cari prediksi tanggal haid berikutnya (>= hari ini)
+$nextStart = clone $lastStart;
+while ($nextStart <= $today) {
+    $nextStart->modify("+{$cycle_range} days");
+}
+$nextPeriodStr = $nextStart->format("Y-m-d");
+
+// kalau lagi haid → 0 hari, kalau tidak → selisih ke nextStart
+if ($isMenstruating) {
+    $daysToNext = 0;
+} else {
+    $daysToNext = $today->diff($nextStart)->days;
+}
 
 /* 4. FASE */
 $phase = "folikular";
@@ -90,7 +114,7 @@ $stmt = $conn->prepare("
 ");
 $stmt->bind_param('s', $user_id);
 $stmt->execute();
-$resMood = $stmt->get_result();
+$resMood   = $stmt->get_result();
 $todayMood = $resMood ? $resMood->fetch_assoc() : null;
 
 /* 6. AKTIVITAS */
@@ -104,8 +128,8 @@ $stmt = $conn->prepare("
 ");
 $stmt->bind_param('s', $user_id);
 $stmt->execute();
-$resAct = $stmt->get_result();
-$activities = $resAct ? $resAct->fetch_all(MYSQLI_ASSOC) : [];
+$resAct      = $stmt->get_result();
+$activities  = $resAct ? $resAct->fetch_all(MYSQLI_ASSOC) : [];
 
 /* 7. ARTIKEL */
 $stmt = $conn->prepare("
@@ -117,22 +141,24 @@ $stmt = $conn->prepare("
 ");
 $stmt->bind_param('s', $phase);
 $stmt->execute();
-$resArt = $stmt->get_result();
-$articles = $resArt ? $resArt->fetch_all(MYSQLI_ASSOC) : [];
+$resArt    = $stmt->get_result();
+$articles  = $resArt ? $resArt->fetch_all(MYSQLI_ASSOC) : [];
 
 /* 8. RESPONSE */
 jsonResponse(200, [
     'success' => true,
-    'user' => $user,
-    'cycle' => [
-        'last_start'        => $last_start,
-        'period_length'     => $period_length,
-        'cycle_length_range'=> $cycle_range,
-        'cycle_day'         => $cycleDay,
-        'today_phase'       => $phase,
-        'next_period_start' => $nextPeriodStr
+    'user'    => $user,
+    'cycle'   => [
+        'last_start'          => $last_start,
+        'period_length'       => $period_length,
+        'cycle_length_range'  => $cycle_range,
+        'cycle_day'           => $cycleDay,
+        'today_phase'         => $phase,
+        'next_period_start'   => $nextPeriodStr,
+        'is_menstruating'     => $isMenstruating,
+        'days_to_next_period' => $daysToNext
     ],
-    'today_mood'          => $todayMood,
-    'upcoming_activities' => $activities,
-    'recommended_articles'=> $articles
+    'today_mood'           => $todayMood,
+    'upcoming_activities'  => $activities,
+    'recommended_articles' => $articles
 ]);

@@ -1,6 +1,7 @@
 <?php
 // api/mood_logs.php
 require 'config.php';
+require_once '../classes/Helper.php';  
 
 if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     $user_id = $_GET['user_id'] ?? null;
@@ -32,22 +33,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         jsonResponse(400, ['error' => 'user_id dan mood_id wajib']);
     }
 
-    // generate id manual karena kolom id bukan AUTO_INCREMENT
-    $id = uniqid('ML');
+    // generate id pendek (ML001, dst)
+    $id = Helper::generateId($conn, 'mood_logs', 'ML', 'id');
 
     $sql = "INSERT INTO mood_logs (id, user_id, mood_id, date, time, note, created_at)
             VALUES (?, ?, ?, CURDATE(), CURTIME(), ?, NOW())";
 
     $stmt = $conn->prepare($sql);
-    // ada 4 placeholder: id, user_id, mood_id, note
     $stmt->bind_param('ssss', $id, $user_id, $mood_id, $note);
     $ok = $stmt->execute();
 
     if (!$ok) {
-        jsonResponse(500, ['error' => 'Gagal simpan mood log', 'detail' => $stmt->error]);
+        jsonResponse(500, [
+            'error'  => 'Gagal simpan mood log',
+            'detail' => $stmt->error,
+            'input'  => $input
+        ]);
     }
 
-    // Ambil mood terakhir hari ini untuk dikembalikan
     $sqlLast = "SELECT ml.id, ml.mood_id, m.name, m.icon, m.mood_tag
                 FROM mood_logs ml
                 JOIN moods m ON ml.mood_id = m.id
@@ -62,5 +65,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     jsonResponse(201, ['success' => true, 'today_mood' => $todayMood]);
 }
+
 
 jsonResponse(405, ['error' => 'Method not allowed']);
