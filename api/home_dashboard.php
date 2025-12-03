@@ -1,15 +1,10 @@
 <?php
-require 'config.php';   // koneksi, json helper, dsb
+require 'config.php';   // sudah ada fungsi jsonResponse()
 
-header('Content-Type: application/json; charset=utf-8');
 error_reporting(E_ALL);
-ini_set('display_errors', 0); // jangan tampilkan HTML error ke output
-
-function jsonResponse($statusCode, $data) {
-    http_response_code($statusCode);
-    echo json_encode($data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
-    exit;
-}
+ini_set('display_errors', 1);
+ini_set('log_errors', 1);
+ini_set('error_log', __DIR__ . '/error_log.txt');
 
 if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
     jsonResponse(405, ['error' => 'Method not allowed']);
@@ -22,34 +17,35 @@ if (!$user_id) {
 
 /* 1. CEK USER */
 $stmt = $conn->prepare("SELECT id, name, email FROM users WHERE id = ? LIMIT 1");
-if (!$stmt) jsonResponse(500, ['error' => 'Prepare gagal: '.$conn->error]);
 $stmt->bind_param('s', $user_id);
-if (!$stmt->execute()) jsonResponse(500, ['error' => 'Execute gagal: '.$stmt->error]);
+$stmt->execute();
 $resUser = $stmt->get_result();
-if (!$resUser) jsonResponse(500, ['error' => 'get_result gagal: '.$stmt->error]);
-if ($resUser->num_rows === 0) jsonResponse(404, ['error' => 'User tidak ditemukan']);
+if ($resUser->num_rows === 0) {
+    jsonResponse(404, ['error' => 'User tidak ditemukan']);
+}
 $user = $resUser->fetch_assoc();
 
-/* 2. PROFIL SIKLUS */
+/* 2. PROFIL SIKLUS dari period_cycles */
 $stmt = $conn->prepare("
-    SELECT last_period_start, period_length, cycle_length,
-           regularity, pain_level
-    FROM user_profile
+    SELECT start_date AS last_period_start,
+           period_length,
+           cycle_length AS cycle_length_range
+    FROM period_cycles
     WHERE user_id = ?
+    ORDER BY start_date DESC
     LIMIT 1
 ");
-if (!$stmt) jsonResponse(500, ['error' => 'Prepare gagal: '.$conn->error]);
 $stmt->bind_param('s', $user_id);
-if (!$stmt->execute()) jsonResponse(500, ['error' => 'Execute gagal: '.$stmt->error]);
+$stmt->execute();
 $resProfile = $stmt->get_result();
-if (!$resProfile) jsonResponse(500, ['error' => 'get_result gagal: '.$stmt->error]);
 $profile = $resProfile->fetch_assoc();
 
-if (!$profile) {
+/* Jika belum ada data siklus */
+if (!$profile || empty($profile['last_period_start'])) {
     jsonResponse(200, [
         'success' => true,
         'needs_screening' => true,
-        'message' => 'User belum mengisi screening awal',
+        'message' => 'Belum ada data siklus',
         'user' => $user,
         'cycle' => null,
         'today_mood' => null,
@@ -61,14 +57,14 @@ if (!$profile) {
 /* 3. HITUNG SIKLUS */
 $last_start     = $profile['last_period_start'];
 $period_length  = (int)$profile['period_length'];
-$cycle_length   = (int)$profile['cycle_length'];
+$cycle_range    = (int)$profile['cycle_length_range'];
 
 $lastStart      = new DateTime($last_start);
 $today          = new DateTime();
 $cycleDay       = $lastStart->diff($today)->days + 1;
 
 $nextStart      = clone $lastStart;
-$nextStart->modify("+{$cycle_length} days");
+$nextStart->modify("+$cycle_range days");
 $nextPeriodStr  = $nextStart->format("Y-m-d");
 
 /* 4. FASE */
@@ -91,24 +87,22 @@ $stmt = $conn->prepare("
     WHERE ml.user_id = ? AND ml.date = CURDATE()
     LIMIT 1
 ");
-if (!$stmt) jsonResponse(500, ['error' => 'Prepare gagal: '.$conn->error]);
 $stmt->bind_param('s', $user_id);
-if (!$stmt->execute()) jsonResponse(500, ['error' => 'Execute gagal: '.$stmt->error]);
+$stmt->execute();
 $resMood = $stmt->get_result();
 $todayMood = $resMood ? $resMood->fetch_assoc() : null;
 
 /* 6. AKTIVITAS */
 $stmt = $conn->prepare("
-    SELECT id, title, event_date, event_time
+    SELECT id, title, date, start_time
     FROM activities
     WHERE user_id = ? 
-      AND event_date >= CURDATE()
-    ORDER BY event_date ASC, event_time ASC
+      AND date >= CURDATE()
+    ORDER BY date ASC, start_time ASC
     LIMIT 3
 ");
-if (!$stmt) jsonResponse(500, ['error' => 'Prepare gagal: '.$conn->error]);
 $stmt->bind_param('s', $user_id);
-if (!$stmt->execute()) jsonResponse(500, ['error' => 'Execute gagal: '.$stmt->error]);
+$stmt->execute();
 $resAct = $stmt->get_result();
 $activities = $resAct ? $resAct->fetch_all(MYSQLI_ASSOC) : [];
 
@@ -120,9 +114,8 @@ $stmt = $conn->prepare("
     ORDER BY created_at DESC
     LIMIT 3
 ");
-if (!$stmt) jsonResponse(500, ['error' => 'Prepare gagal: '.$conn->error]);
 $stmt->bind_param('s', $phase);
-if (!$stmt->execute()) jsonResponse(500, ['error' => 'Execute gagal: '.$stmt->error]);
+$stmt->execute();
 $resArt = $stmt->get_result();
 $articles = $resArt ? $resArt->fetch_all(MYSQLI_ASSOC) : [];
 
@@ -133,7 +126,7 @@ jsonResponse(200, [
     'cycle' => [
         'last_start'        => $last_start,
         'period_length'     => $period_length,
-        'cycle_length'      => $cycle_length,
+        'cycle_length_range'=> $cycle_range,
         'cycle_day'         => $cycleDay,
         'today_phase'       => $phase,
         'next_period_start' => $nextPeriodStr

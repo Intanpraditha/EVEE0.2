@@ -6,7 +6,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     $user_id = $_GET['user_id'] ?? null;
     if (!$user_id) jsonResponse(400, ['error'=>'user_id wajib']);
 
-    $sql = "SELECT id, user_id, start_date, end_date, cycle_length, period_length, note, created_at
+    $sql = "SELECT id, user_id,
+                   DATE_FORMAT(start_date, '%Y-%m-%d') AS start_date,
+                   DATE_FORMAT(end_date, '%Y-%m-%d') AS end_date,
+                   cycle_length, period_length, note, created_at
             FROM period_cycles
             WHERE user_id = ?
             ORDER BY start_date DESC";
