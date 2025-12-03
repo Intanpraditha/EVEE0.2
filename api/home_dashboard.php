@@ -1,120 +1,113 @@
 <?php
-require 'config.php';   // koneksi, json helper, dsb
+require 'config.php';   // sudah ada fungsi jsonResponse()
+
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
+ini_set('log_errors', 1);
+ini_set('error_log', __DIR__ . '/error_log.txt');
 
 if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
     jsonResponse(405, ['error' => 'Method not allowed']);
 }
 
 $user_id = $_GET['user_id'] ?? null;
-
 if (!$user_id) {
     jsonResponse(400, ['error' => 'user_id wajib']);
 }
 
-/* ============================================================
-   1. CEK USER ADA ATAU TIDAK
-   ============================================================ */
+/* 1. CEK USER */
 $stmt = $conn->prepare("SELECT id, name, email FROM users WHERE id = ? LIMIT 1");
 $stmt->bind_param('s', $user_id);
 $stmt->execute();
 $resUser = $stmt->get_result();
-
 if ($resUser->num_rows === 0) {
     jsonResponse(404, ['error' => 'User tidak ditemukan']);
 }
-
 $user = $resUser->fetch_assoc();
 
-/* ============================================================
-   2. AMBIL PROFIL SIKLUS USER (SCREENING)
-   ============================================================ */
+/* 2. PROFIL SIKLUS dari period_cycles */
 $stmt = $conn->prepare("
-    SELECT last_period_start, period_length, cycle_length,
-           regularity, pain_level
-    FROM user_profile
+    SELECT start_date AS last_period_start,
+           period_length,
+           cycle_length AS cycle_length_range
+    FROM period_cycles
     WHERE user_id = ?
+    ORDER BY start_date DESC
     LIMIT 1
 ");
 $stmt->bind_param('s', $user_id);
 $stmt->execute();
 $resProfile = $stmt->get_result();
-
 $profile = $resProfile->fetch_assoc();
 
-if (!$profile) {
+/* Jika belum ada data siklus */
+if (!$profile || empty($profile['last_period_start'])) {
     jsonResponse(200, [
+        'success' => true,
         'needs_screening' => true,
-        'message' => 'User belum mengisi screening awal'
+        'message' => 'Belum ada data siklus',
+        'user' => $user,
+        'cycle' => null,
+        'today_mood' => null,
+        'upcoming_activities' => [],
+        'recommended_articles' => []
     ]);
 }
 
-/* ============================================================
-   3. HITUNG PREDIKSI SIKLUS
-   ============================================================ */
+/* 3. HITUNG SIKLUS */
 $last_start     = $profile['last_period_start'];
 $period_length  = (int)$profile['period_length'];
-$cycle_length   = (int)$profile['cycle_length'];
+$cycle_range    = (int)$profile['cycle_length_range'];
 
 $lastStart      = new DateTime($last_start);
 $today          = new DateTime();
+$cycleDay       = $lastStart->diff($today)->days + 1;
 
-$cycleDay = $lastStart->diff($today)->days + 1;   // contoh: 1 = hari pertama haid
+$nextStart      = clone $lastStart;
+$nextStart->modify("+$cycle_range days");
+$nextPeriodStr  = $nextStart->format("Y-m-d");
 
-// Prediksi periode berikutnya
-$nextStart = clone $lastStart;
-$nextStart->modify("+{$cycle_length} days");
-
-$todayStr = $today->format("Y-m-d");
-$nextPeriodStr = $nextStart->format("Y-m-d");
-
-/* ============================================================
-   4. TENTUKAN FASE SIKLUS HARI INI
-   ============================================================ */
-$phase = "folikular"; // default
-
+/* 4. FASE */
+$phase = "folikular";
 if ($cycleDay <= $period_length) {
     $phase = "menstruasi";
-} else if ($cycleDay == 14) {
+} elseif ($cycleDay == 14) {
     $phase = "ovulasi";
-} else if ($cycleDay > $period_length && $cycleDay < 14) {
+} elseif ($cycleDay > $period_length && $cycleDay < 14) {
     $phase = "folikular";
-} else if ($cycleDay > 14) {
+} elseif ($cycleDay > 14) {
     $phase = "luteal";
 }
 
-/* ============================================================
-   5. MOOD HARI INI
-   ============================================================ */
+/* 5. MOOD TERBARU HARI INI */
 $stmt = $conn->prepare("
     SELECT ml.id, ml.mood_id, m.name, m.icon, m.mood_tag
     FROM mood_logs ml
     JOIN moods m ON m.id = ml.mood_id
     WHERE ml.user_id = ? AND ml.date = CURDATE()
+    ORDER BY ml.time DESC, ml.created_at DESC
     LIMIT 1
 ");
 $stmt->bind_param('s', $user_id);
 $stmt->execute();
 $resMood = $stmt->get_result();
-$todayMood = $resMood->fetch_assoc();
+$todayMood = $resMood ? $resMood->fetch_assoc() : null;
 
-/* ============================================================
-   6. AKTIVITAS TERDEKAT (3 TERATAS)
-   ============================================================ */
+/* 6. AKTIVITAS */
 $stmt = $conn->prepare("
-    SELECT id, title, event_date, event_time
+    SELECT id, title, date, start_time
     FROM activities
     WHERE user_id = ? 
-      AND event_date >= CURDATE()
-    ORDER BY event_date ASC, event_time ASC
+      AND date >= CURDATE()
+    ORDER BY date ASC, start_time ASC
     LIMIT 3
 ");
 $stmt->bind_param('s', $user_id);
 $stmt->execute();
-$activities = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+$resAct = $stmt->get_result();
+$activities = $resAct ? $resAct->fetch_all(MYSQLI_ASSOC) : [];
 
-/* ============================================================
-   7. REKOMENDASI ARTIKEL BERDASARKAN FASE
-   ============================================================ */
+/* 7. ARTIKEL */
 $stmt = $conn->prepare("
     SELECT id, title, link, image, phase
     FROM articles
@@ -124,27 +117,22 @@ $stmt = $conn->prepare("
 ");
 $stmt->bind_param('s', $phase);
 $stmt->execute();
-$articles = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+$resArt = $stmt->get_result();
+$articles = $resArt ? $resArt->fetch_all(MYSQLI_ASSOC) : [];
 
-/* ============================================================
-   8. RESPONSE LENGKAP UNTUK DASHBOARD
-   ============================================================ */
+/* 8. RESPONSE */
 jsonResponse(200, [
     'success' => true,
     'user' => $user,
-
     'cycle' => [
-        'last_start'       => $last_start,
-        'period_length'    => $period_length,
-        'cycle_length'     => $cycle_length,
-        'cycle_day'        => $cycleDay,
-        'today_phase'      => $phase,
-        'next_period_start'=> $nextPeriodStr
+        'last_start'        => $last_start,
+        'period_length'     => $period_length,
+        'cycle_length_range'=> $cycle_range,
+        'cycle_day'         => $cycleDay,
+        'today_phase'       => $phase,
+        'next_period_start' => $nextPeriodStr
     ],
-
-    'today_mood' => $todayMood ?: null,
-
+    'today_mood'          => $todayMood,
     'upcoming_activities' => $activities,
-
-    'recommended_articles' => $articles
+    'recommended_articles'=> $articles
 ]);

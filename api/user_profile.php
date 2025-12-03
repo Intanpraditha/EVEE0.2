@@ -1,16 +1,25 @@
 <?php
-require 'config.php';   // di sini ada $conn, getJsonInput(), jsonResponse()
+// ===============================================
+// DEBUG (hapus jika sudah produksi)
+// ===============================================
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
 
-// ============ GET -> CEK PROFIL USER ============
+// ===============================================
+require 'config.php';   // WAJIB berisi $conn + getJsonInput() + jsonResponse()
+// ===============================================
+
+
+// ===============================================
+// GET — Ambil data profil user
+// ===============================================
 if ($_SERVER['REQUEST_METHOD'] === 'GET') {
-    $user_id = $_GET['user_id'] ?? null;
 
-    if (!$user_id) {
-        jsonResponse(400, ['error' => 'user_id wajib']);
-    }
+    $user_id = $_GET['user_id'] ?? null;
+    if (!$user_id) jsonResponse(400, ['error' => 'user_id wajib']);
 
     $stmt = $conn->prepare("
-        SELECT user_id, last_period_start, period_length, cycle_length,
+        SELECT user_id, last_period_start, period_length, cycle_length_range,
                regularity, pain_level, created_at, updated_at
         FROM user_profile
         WHERE user_id = ?
@@ -21,147 +30,153 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     $res = $stmt->get_result();
     $row = $res->fetch_assoc();
 
-    if (!$row) {
-        // belum pernah screening
-        jsonResponse(200, ['has_profile' => false]);
-    }
+    // belum pernah screening
+    if (!$row) jsonResponse(200, ['has_profile' => false]);
 
     $row['has_profile'] = true;
+
     jsonResponse(200, $row);
 }
 
-// ============ POST -> SIMPAN / UPDATE SCREENING ============
+
+// ===============================================
+// POST — Simpan screening (based on answers[])
+// ===============================================
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+
     $input = getJsonInput();
 
-    $user_id           = $input['user_id']           ?? null;
-    $last_period_start = $input['last_period_start'] ?? null;   // Y-m-d
-    $period_length     = $input['period_length']     ?? null;   // int
-    $cycle_length      = $input['cycle_length']      ?? null;   // int
-    $regularity        = $input['regularity']        ?? null;   // string
-    $pain_level        = $input['pain_level']        ?? null;   // string
-
-    // ====== VALIDASI SEDERHANA ======
-    if (!$user_id || !$last_period_start || !$period_length || !$cycle_length) {
-        jsonResponse(400, ['success' => false, 'error' => 'user_id, last_period_start, period_length, cycle_length wajib diisi']);
+    if (!isset($input['user_id']) || !isset($input['answers'])) {
+        jsonResponse(400, ['success'=>false, 'error'=>'user_id dan answers wajib']);
     }
 
-    $period_length = (int)$period_length;
-    $cycle_length  = (int)$cycle_length;
+    $user_id = $input['user_id'];
+    $answers = $input['answers'];
 
-    if ($period_length <= 0 || $period_length > 15) {
-        jsonResponse(400, ['success' => false, 'error' => 'period_length tidak valid']);
-    }
-    if ($cycle_length < 15 || $cycle_length > 60) {
-        jsonResponse(400, ['success' => false, 'error' => 'cycle_length tidak valid']);
+    if (!is_array($answers) || count($answers) < 6) {
+        jsonResponse(400, ['success'=>false, 'error'=>'answers harus berisi 6 item']);
     }
 
-    // default value kalau kosong
-    if (!$regularity) $regularity = 'teratur';
-    if (!$pain_level) $pain_level = 'ringan';
+    // ===============================================
+    // KONVERSI ANSWERS → FIELD DATABASE
+    // ===============================================
 
-    // ====== CEK user ada atau tidak ======
+    // 1 — last_period_start
+    switch ($answers[1]) {
+        case 0:  $last_period_start = date('Y-m-d', strtotime('-3 days')); break;
+        case 1:  $last_period_start = date('Y-m-d', strtotime('-10 days')); break;
+        case 2:  $last_period_start = date('Y-m-d', strtotime('-25 days')); break;
+        default: $last_period_start = date('Y-m-d', strtotime('-30 days')); break;
+    }
+
+    // 2 — period_length
+    $period_length_map = [2, 4, 6, 8];
+    $period_length = $period_length_map[$answers[2]] ?? 5;
+
+    // 3 — cycle_length_range (enum)
+    $cycle_range_map = ['<25', '25-30', '>30', 'tidak_pasti'];
+    $cycle_length_range = $cycle_range_map[$answers[3]] ?? '25-30';
+
+    // 4 — regularitas
+    $regularity_map = ['teratur', 'kadang_telat', 'sangat_tidak_teratur'];
+    $regularity = $regularity_map[$answers[4]] ?? 'teratur';
+
+    // 5 — tingkat nyeri
+    $pain_map = ['ringan', 'sedang', 'berat'];
+    $pain_level = $pain_map[$answers[5]] ?? 'ringan';
+
+    // ===============================================
+    // CEK USER ADA
+    // ===============================================
     $stmt = $conn->prepare("SELECT id FROM users WHERE id = ? LIMIT 1");
     $stmt->bind_param('s', $user_id);
     $stmt->execute();
     $resUser = $stmt->get_result();
+
     if ($resUser->num_rows === 0) {
-        jsonResponse(404, ['success' => false, 'error' => 'User tidak ditemukan']);
+        jsonResponse(404, ['success'=>false, 'error'=>'User tidak ditemukan']);
     }
 
-    // ====== CEK SUDAH PUNYA user_profile BELUM ======
+    // ===============================================
+    // INSERT / UPDATE user_profile
+    // ===============================================
     $stmt = $conn->prepare("SELECT user_id FROM user_profile WHERE user_id = ? LIMIT 1");
     $stmt->bind_param('s', $user_id);
     $stmt->execute();
-    $resProf = $stmt->get_result();
-    $exists  = $resProf->num_rows > 0;
+    $exists = $stmt->get_result()->num_rows > 0;
 
     if ($exists) {
-        // UPDATE
         $sql = "UPDATE user_profile
                 SET last_period_start = ?,
                     period_length     = ?,
-                    cycle_length      = ?,
+                    cycle_length_range= ?,
                     regularity        = ?,
                     pain_level        = ?,
                     updated_at        = NOW()
                 WHERE user_id = ?";
+
         $stmt = $conn->prepare($sql);
         $stmt->bind_param(
-            'siisss',
+            'sissss',
             $last_period_start,
             $period_length,
-            $cycle_length,
+            $cycle_length_range,
             $regularity,
             $pain_level,
             $user_id
         );
-        $ok = $stmt->execute();
+        $stmt->execute();
+
     } else {
-        // INSERT
         $sql = "INSERT INTO user_profile
-                (user_id, last_period_start, period_length, cycle_length,
-                 regularity, pain_level, created_at, updated_at)
+                (user_id, last_period_start, period_length, cycle_length_range,
+                regularity, pain_level, created_at, updated_at)
                 VALUES (?,?,?,?,?,?,NOW(),NOW())";
+
         $stmt = $conn->prepare($sql);
         $stmt->bind_param(
-            'ssiiss',
+            'ssisss',
             $user_id,
             $last_period_start,
             $period_length,
-            $cycle_length,
+            $cycle_length_range,
             $regularity,
             $pain_level
         );
-        $ok = $stmt->execute();
+        $stmt->execute();
     }
 
-    if (!$ok) {
-        jsonResponse(500, ['success' => false, 'error' => 'Gagal menyimpan user_profile']);
-    }
+    // ===============================================
+    // INSERT period_cycles (riwayat siklus)
+    // ===============================================
+    $cycleId = uniqid('C');
+    $end_date = null; // bisa diisi otomatis jika mau
+    $note = null;
 
-    // ====== SINKRONKAN DENGAN period_cycles ======
-    // cek apakah sudah ada siklus dengan start_date itu
-    $stmt = $conn->prepare("
-        SELECT id FROM period_cycles
-        WHERE user_id = ? AND start_date = ?
-        LIMIT 1
-    ");
-    $stmt->bind_param('ss', $user_id, $last_period_start);
+    $sql = "INSERT INTO period_cycles
+            (id, user_id, start_date, end_date, cycle_length, period_length, note, created_at)
+            VALUES (?,?,?,?,?,?,?,NOW())";
+
+    $stmt = $conn->prepare($sql);
+    // untuk cycle_length, ambil angka default dari mapping (misalnya 28 hari)
+    $cycle_length_map = [24, 28, 30, 32];
+    $cycle_length = $cycle_length_map[$answers[3]] ?? 28;
+
+    $stmt->bind_param(
+        'sssiiis',
+        $cycleId,
+        $user_id,
+        $last_period_start,
+        $end_date,
+        $cycle_length,
+        $period_length,
+        $note
+    );
     $stmt->execute();
-    $resCycle = $stmt->get_result();
 
-    if ($resCycle->num_rows > 0) {
-        // UPDATE siklus lama
-        $rowCycle = $resCycle->fetch_assoc();
-        $cycleId  = $rowCycle['id'];
-
-        $sql = "UPDATE period_cycles
-                SET period_length = ?,
-                    cycle_length  = ?,
-                    updated_at    = NOW()
-                WHERE id = ?";
-        $stmt = $conn->prepare($sql);
-        $stmt->bind_param('iis', $period_length, $cycle_length, $cycleId);
-        $stmt->execute();
-    } else {
-        // INSERT siklus baru
-        $cycleId = uniqid('C');
-        $sql = "INSERT INTO period_cycles
-                (id, user_id, start_date, end_date, period_length, cycle_length, created_at, updated_at)
-                VALUES (?,?,?,NULL,?,?,NOW(),NOW())";
-        $stmt = $conn->prepare($sql);
-        $stmt->bind_param(
-            'sssii',
-            $cycleId,
-            $user_id,
-            $last_period_start,
-            $period_length,
-            $cycle_length
-        );
-        $stmt->execute();
-    }
-
+    // ===============================================
+    // RESPONSE
+    // ===============================================
     jsonResponse(200, [
         'success' => true,
         'message' => 'Screening tersimpan',
@@ -170,4 +185,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     ]);
 }
 
+
+// ===============================================
 jsonResponse(405, ['error' => 'Method not allowed']);
+// ===============================================

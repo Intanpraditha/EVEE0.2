@@ -13,7 +13,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
             FROM mood_logs ml
             JOIN moods m ON m.id = ml.mood_id
             WHERE ml.user_id = ?
-            ORDER BY ml.date DESC, ml.time DESC";
+            ORDER BY ml.date DESC, ml.time DESC, ml.created_at DESC";
     $stmt = $conn->prepare($sql);
     $stmt->bind_param('s', $user_id);
     $stmt->execute();
@@ -23,7 +23,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $input  = getJsonInput();
+    $input   = getJsonInput();
     $user_id = $input['user_id'] ?? null;
     $mood_id = $input['mood_id'] ?? null;
     $note    = $input['note']    ?? null;
@@ -32,23 +32,35 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         jsonResponse(400, ['error' => 'user_id dan mood_id wajib']);
     }
 
-    $date = date('Y-m-d');
-    $time = date('H:i:s');
+    // generate id manual karena kolom id bukan AUTO_INCREMENT
+    $id = uniqid('ML');
 
     $sql = "INSERT INTO mood_logs (id, user_id, mood_id, date, time, note, created_at)
-            VALUES (?, ?, ?, ?, ?, ?, NOW())";
-    // ID bisa auto, tapi kalau kamu pakai VARCHAR manual, ganti di sini
-    $id  = uniqid('ML');
+            VALUES (?, ?, ?, CURDATE(), CURTIME(), ?, NOW())";
 
     $stmt = $conn->prepare($sql);
-    $stmt->bind_param('ssssss', $id, $user_id, $mood_id, $date, $time, $note);
+    // ada 4 placeholder: id, user_id, mood_id, note
+    $stmt->bind_param('ssss', $id, $user_id, $mood_id, $note);
     $ok = $stmt->execute();
 
     if (!$ok) {
-        jsonResponse(500, ['error' => 'Gagal simpan mood log']);
+        jsonResponse(500, ['error' => 'Gagal simpan mood log', 'detail' => $stmt->error]);
     }
 
-    jsonResponse(201, ['success' => true, 'id' => $id]);
+    // Ambil mood terakhir hari ini untuk dikembalikan
+    $sqlLast = "SELECT ml.id, ml.mood_id, m.name, m.icon, m.mood_tag
+                FROM mood_logs ml
+                JOIN moods m ON ml.mood_id = m.id
+                WHERE ml.user_id = ? AND ml.date = CURDATE()
+                ORDER BY ml.time DESC, ml.created_at DESC
+                LIMIT 1";
+    $stmt2 = $conn->prepare($sqlLast);
+    $stmt2->bind_param('s', $user_id);
+    $stmt2->execute();
+    $res2 = $stmt2->get_result();
+    $todayMood = $res2 ? $res2->fetch_assoc() : null;
+
+    jsonResponse(201, ['success' => true, 'today_mood' => $todayMood]);
 }
 
 jsonResponse(405, ['error' => 'Method not allowed']);
