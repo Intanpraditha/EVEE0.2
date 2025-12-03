@@ -127,14 +127,18 @@ include '../includes/topbar.php';
                         <div class="col-md-2">
                             <select name="mood_tag" class="form-control">
                                 <option value="">Tag (opsional)</option>
-                                <option value="netral">Netral</option>
-                                <option value="capek">Capek</option>
-                                <option value="cemas">Cemas</option>
-                                <option value="sedih">Sedih</option>
-                                <option value="sensitif">Sensitif</option>
+                                <option value="bersemangat">Bersemanagat</option>
+                                <option value="bosan">Bosan</option>
+                                <option value="percaya_diri">Percaya diri</option>
+                                <option value="marah">Marah</option>
+                                <option value="sedih">sedih</option>
+                                <option value="biasa_aja">Biasa aja</option>
+                                <option value="anxiety">Anxiety</option>
+                                <option value="lelah">Lelah</option>
                                 <option value="senang">Senang</option>
                             </select>
                         </div>
+
 
                         <div class="col-md-2">
                             <button class="btn btn-primary w-100" name="create">Tambah</button>
@@ -228,18 +232,20 @@ include '../includes/topbar.php';
                                                 value="<?= htmlspecialchars($m['description']) ?>">
                                         </div>
 
-                                        <div class="mb-3">
-                                            <label>Tag (untuk self-care rules)</label>
-                                            <select name="edit_mood_tag" class="form-control">
-                                                <option value="" <?= $m['mood_tag'] == '' ? 'selected' : '' ?>>(Tidak ada)</option>
-                                                <option value="netral"   <?= $m['mood_tag']=='netral'   ? 'selected' : '' ?>>Netral</option>
-                                                <option value="capek"    <?= $m['mood_tag']=='capek'    ? 'selected' : '' ?>>Capek</option>
-                                                <option value="cemas"    <?= $m['mood_tag']=='cemas'    ? 'selected' : '' ?>>Cemas</option>
-                                                <option value="sedih"    <?= $m['mood_tag']=='sedih'    ? 'selected' : '' ?>>Sedih</option>
-                                                <option value="sensitif" <?= $m['mood_tag']=='sensitif' ? 'selected' : '' ?>>Sensitif</option>
-                                                <option value="senang"   <?= $m['mood_tag']=='senang'   ? 'selected' : '' ?>>Senang</option>
-                                            </select>
-                                        </div>
+                                        <select name="edit_mood_tag" class="form-control">
+                                            <option value="" <?= $m['mood_tag'] == '' ? 'selected' : '' ?>>(Tidak ada)</option>
+
+                                            <option value="bersemangat" <?= $m['mood_tag']=='bersemangat' ? 'selected' : '' ?>>Bersemanagat</option>
+                                            <option value="bosan"       <?= $m['mood_tag']=='bosan'       ? 'selected' : '' ?>>Bosan</option>
+                                            <option value="percaya_diri"<?= $m['mood_tag']=='percaya_diri'? 'selected' : '' ?>>Percaya diri</option>
+                                            <option value="marah"       <?= $m['mood_tag']=='marah'       ? 'selected' : '' ?>>Marah</option>
+                                            <option value="sedih"       <?= $m['mood_tag']=='sedih'       ? 'selected' : '' ?>>sedih</option>
+                                            <option value="biasa_aja"   <?= $m['mood_tag']=='biasa_aja'   ? 'selected' : '' ?>>Biasa aja</option>
+                                            <option value="anxiety"     <?= $m['mood_tag']=='anxiety'     ? 'selected' : '' ?>>Anxiety</option>
+                                            <option value="lelah"       <?= $m['mood_tag']=='lelah'       ? 'selected' : '' ?>>Lelah</option>
+                                            <option value="senang"      <?= $m['mood_tag']=='senang'      ? 'selected' : '' ?>>Senang</option>
+                                        </select>
+
 
                                     </div>
 
