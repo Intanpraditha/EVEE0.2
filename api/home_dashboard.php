@@ -79,12 +79,13 @@ if ($cycleDay <= $period_length) {
     $phase = "luteal";
 }
 
-/* 5. MOOD */
+/* 5. MOOD TERBARU HARI INI */
 $stmt = $conn->prepare("
     SELECT ml.id, ml.mood_id, m.name, m.icon, m.mood_tag
     FROM mood_logs ml
     JOIN moods m ON m.id = ml.mood_id
     WHERE ml.user_id = ? AND ml.date = CURDATE()
+    ORDER BY ml.time DESC, ml.created_at DESC
     LIMIT 1
 ");
 $stmt->bind_param('s', $user_id);
