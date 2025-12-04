@@ -23,6 +23,12 @@ if (!$user || !password_verify($password, $user['password'])) {
     jsonResponse(401, ['success' => false, 'error' => 'Email atau password salah']);
 }
 
+// UPDATE LAST LOGIN
+$upd = $conn->prepare("UPDATE users SET last_login = NOW() WHERE id = ?");
+$upd->bind_param("s", $user['id']);
+$upd->execute();
+
+
 jsonResponse(200, [
     'success' => true,
     'user' => [

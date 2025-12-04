@@ -100,6 +100,14 @@ include '../includes/topbar.php';
             <!-- Tabel Users -->
             <div class="card">
                 <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h4 class="fw-semibold mb-0">Data User</h4>
+
+                        <a href="export_users.php" class="btn btn-sm btn-primary">
+                            Export CSV
+                        </a>
+                    </div>
+
                     <table class="table table-bordered align-middle">
                         <thead>
                             <tr>

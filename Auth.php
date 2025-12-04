@@ -21,16 +21,20 @@ if ($result->num_rows === 0) {
 
 $user = $result->fetch_assoc();
 
-// verifikasi password hashed
 if (!password_verify($password, $user['password'])) {
     header("Location: login.php?error=Password salah");
     exit;
 }
 
-// login sukses → buat session
+// login sukses
 $_SESSION['admin_id']   = $user['id'];
 $_SESSION['admin_name'] = $user['name'];
 $_SESSION['admin_email']= $user['email'];
+
+// --- FIX BAGIAN INI ---
+$upd = $conn->prepare("UPDATE users SET last_login = NOW() WHERE id = ?");
+$upd->bind_param("s", $user['id']);
+$upd->execute();
 
 header("Location: pages/dashboard.php");
 exit;
