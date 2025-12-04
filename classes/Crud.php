@@ -118,5 +118,25 @@ class Crud
         $stmt->bind_param($types, ...$values);
         return $stmt->execute();
     }
+    public function rawQuery($sql, $params = [])
+    {
+        $stmt = $this->conn->prepare($sql);
+
+        if ($params) {
+            // buat string type param
+            $types = str_repeat('s', count($params));
+            $stmt->bind_param($types, ...$params);
+        }
+
+        $stmt->execute();
+        $result = $stmt->get_result();
+
+        if ($result === FALSE) {
+            return false;
+        }
+
+        return $result->fetch_all(MYSQLI_ASSOC);
+    }
+
 }
 ?>

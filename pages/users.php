@@ -55,7 +55,16 @@ if (isset($_POST['update'])) {
     $obj->update('users', $data, "id = ?", [$id]);
 }
 
-$users = $obj->readAll('users');
+// $users = $obj->readAll('users');
+
+$filterRole = $_GET['filter_role'] ?? '';
+
+if ($filterRole === 'user' || $filterRole === 'admin') {
+    $users = $obj->rawQuery("SELECT * FROM users WHERE role = ?", [$filterRole]);
+} else {
+    $users = $obj->readAll('users'); // default semua
+}
+
 
 include '../includes/header.php';
 include '../includes/sidebar.php';
@@ -103,10 +112,24 @@ include '../includes/topbar.php';
                     <div class="d-flex justify-content-between align-items-center mb-3">
                         <h4 class="fw-semibold mb-0">Data User</h4>
 
-                        <a href="export_users.php" class="btn btn-sm btn-primary">
+                        <a href="export_users.php?role=<?= $_GET['filter_role'] ?? '' ?>" class="btn btn-sm btn-primary">
                             Export CSV
                         </a>
+
                     </div>
+                    <!-- Filter Role -->
+                    <form method="GET" class="row g-3 mb-3">
+                        <div class="col-md-3">
+                            <select name="filter_role" class="form-control">
+                                <option value="">Semua Role</option>
+                                <option value="user"  <?= (isset($_GET['filter_role']) && $_GET['filter_role'] == 'user') ? 'selected' : '' ?>>User</option>
+                                <option value="admin" <?= (isset($_GET['filter_role']) && $_GET['filter_role'] == 'admin') ? 'selected' : '' ?>>Admin</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <button class="btn btn-primary w-100" type="submit">Filter</button>
+                        </div>
+                    </form>
 
                     <table class="table table-bordered align-middle">
                         <thead>
@@ -117,6 +140,7 @@ include '../includes/topbar.php';
                                 <th>Role</th>
                                 <th>Tgl Lahir</th>
                                 <th>Dibuat</th>
+                                <th>Terakhir login</th>
                                 <th>Aksi</th>
                             </tr>
                         </thead>
@@ -129,6 +153,13 @@ include '../includes/topbar.php';
                                 <td><?= htmlspecialchars($u['role']) ?></td>
                                 <td><?= htmlspecialchars($u['birth_date']) ?></td>
                                 <td><?= htmlspecialchars($u['created_at']) ?></td>
+                                <td>
+                                    <?php if (!empty($u['last_login'])): ?>
+                                        <?= htmlspecialchars($u['last_login']) ?>
+                                    <?php else: ?>
+                                        <span class="text-muted small">Belum pernah login</span>
+                                    <?php endif; ?>
+                                </td>
                                 <td>
                                     <button class="btn btn-warning btn-sm"
                                             data-bs-toggle="modal"
