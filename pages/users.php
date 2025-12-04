@@ -134,7 +134,7 @@ include '../includes/topbar.php';
                     <table class="table table-bordered align-middle">
                         <thead>
                             <tr>
-                                <th>ID</th>
+                                
                                 <th>Nama</th>
                                 <th>Email</th>
                                 <th>Role</th>
@@ -147,7 +147,7 @@ include '../includes/topbar.php';
                         <tbody>
                         <?php foreach ($users as $u): ?>
                             <tr>
-                                <td><?= htmlspecialchars($u['id']) ?></td>
+                                
                                 <td><?= htmlspecialchars($u['name']) ?></td>
                                 <td><?= htmlspecialchars($u['email']) ?></td>
                                 <td><?= htmlspecialchars($u['role']) ?></td>
