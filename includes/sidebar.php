@@ -112,14 +112,14 @@
                 <span class="hide-menu">log mood</span>
               </a>
             </li>
-            <li class="sidebar-item">
+            <!-- <li class="sidebar-item">
               <a class="sidebar-link" href="../pages/day_logs.php" aria-expanded="false">
                 <span>
                   <i class="ti ti-calendar-clock"></i>
                 </span>
                 <span class="hide-menu">log hari</span>
               </a>
-            </li>
+            </li> -->
             <li class="sidebar-item">
               <a class="sidebar-link" href="../pages/user_articles.php" aria-expanded="false">
                 <span>
