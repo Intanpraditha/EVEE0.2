@@ -33,8 +33,14 @@ $_SESSION['admin_email']= $user['email'];
 
 // --- FIX BAGIAN INI ---
 $upd = $conn->prepare("UPDATE users SET last_login = NOW() WHERE id = ?");
+
+if (!$upd) {
+    die("SQL ERROR: " . $conn->error);
+}
+
 $upd->bind_param("s", $user['id']);
 $upd->execute();
+
 
 header("Location: pages/dashboard.php");
 exit;
